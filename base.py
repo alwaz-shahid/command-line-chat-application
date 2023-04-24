@@ -31,6 +31,30 @@ def handle_new_client(client_socket):
     welcome_message = f"Welcome to the chat, {username}!\n"
     broadcast(welcome_message, server_socket)
 
+    # Continuously receive messages from the client
+    while True:
+        try:
+            message = client_socket.recv(BUFFER_SIZE).decode().strip()
+            if message:
+                username = client_usernames[client_socket]
+                full_message = f"{username}: {message}\n"
+                broadcast(full_message, exclude_socket=client_socket)
+            else:
+                # Handle broken connections
+                client_socket.close()
+                sockets_list.remove(client_socket)
+                if client_socket in client_usernames:
+                    del client_usernames[client_socket]
+                break
+        except:
+            # Handle broken connections
+            client_socket.close()
+            sockets_list.remove(client_socket)
+            if client_socket in client_usernames:
+                del client_usernames[client_socket]
+            break
+
+
 def broadcast(message, exclude_socket=None):
     """
     Sends a message to all connected clients except for the one
